@@ -1,0 +1,48 @@
+import numpy as np
+import librosa
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+# Load audio data and extract features
+def load_data(file_paths):
+    X = []
+    y = []
+    for path in file_paths:
+        y.append(path.split("/")[-1].split("_")[0])  # Extract label from filename
+        
+        # Load audio file and extract features
+        audio, sr = librosa.load(path)
+        mfccs = librosa.feature.mfcc(y=audio, sr=sr, n_mfcc=13)
+        mfccs_scaled = np.mean(mfccs.T, axis=0)
+        X.append(mfccs_scaled)
+    
+    return np.array(X), np.array(y)
+
+# Train the model
+def train_model(X_train, y_train):
+    clf = RandomForestClassifier(n_estimators=100)
+    clf.fit(X_train, y_train)
+    return clf
+
+# Evaluate the model  
+def evaluate_model(model, X_test, y_test):
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f"Model accuracy: {accuracy:.2f}")
+
+# Main function
+def main():
+    # Load and preprocess the data
+    file_paths = ["path/to/audio/files"]  # List of audio file paths
+    X, y = load_data(file_paths)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    
+    # Train the model
+    model = train_model(X_train, y_train)
+    
+    # Evaluate the model
+    evaluate_model(model, X_test, y_test)
+
+if __name__ == "__main__":
+    main()
